@@ -1,73 +1,62 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import Filter from './components/Filter/Filter';
 import ContactList from './components/ContactList/ContactList';
 import ContactForm from './components/ContactForm/ContactForm';
 
-class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+function App() {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
+  useEffect(() => {
     const contacts = localStorage.getItem('contacts');
     const parseContacts = JSON.parse(contacts);
     if (parseContacts) {
-      this.setState({ contacts: parseContacts });
+      setContacts(parseContacts);
     }
-  }
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  addNewContact = newContact => {
+  const addNewContact = newContact => {
     if (
-      this.state.contacts.some(
+      contacts.some(
         contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
       )
     ) {
       toast.error('contact with such name already exists');
       return;
     }
-    this.setState(prevState => ({
-      contacts: [newContact, ...prevState.contacts],
-    }));
+    setContacts(prevState => [newContact, ...prevState]);
     toast.success('contact added');
   };
 
-  deleteContact = idBtn => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== idBtn),
-    }));
+  const deleteContact = idBtn => {
+    setContacts(prevState => prevState.filter(contact => contact.id !== idBtn));
     toast.success('delete is complete');
   };
 
-  handleChange = e => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value });
+  const handleChangeFilter = e => {
+    const value = e.target.value;
+    setFilter(value);
   };
 
-  render() {
-    const { contacts, filter } = this.state;
-    return (
-      <>
-        <Toaster />
-        <h1>Phonebook</h1>
-        <ContactForm addNewContact={this.addNewContact} />
-        <h2>Contacts</h2>
-        <Filter filter={filter} onChangeFilter={this.handleChange} />
-        <ContactList
-          contacts={contacts}
-          filter={filter}
-          deleteContact={this.deleteContact}
-        />
-      </>
-    );
-  }
+  return (
+    <>
+      <Toaster />
+      <h1>Phonebook</h1>
+      <ContactForm addNewContact={addNewContact} />
+      <h2>Contacts</h2>
+      <Filter filter={filter} onChangeFilter={handleChangeFilter} />
+      <ContactList
+        contacts={contacts}
+        filter={filter}
+        deleteContact={deleteContact}
+      />
+    </>
+  );
 }
 
 export default App;
